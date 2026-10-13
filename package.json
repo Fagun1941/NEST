@@ -1,0 +1,19 @@
+{
+  "name": "suhs-project",
+  "version": "1.0.0",
+  "private": true,
+  "engines": { "node": ">=24" },
+  "scripts": {
+    "setup": "npm --prefix suhs ci && npm --prefix suhs-frontend ci && npm run db:generate",
+    "dev": "node scripts/run-apps.mjs dev",
+    "dev:api": "npm --prefix suhs run start:dev",
+    "dev:web": "npm --prefix suhs-frontend run dev",
+    "build": "npm --prefix suhs run build && npm --prefix suhs-frontend run build",
+    "start": "node scripts/run-apps.mjs start",
+    "lint": "npm --prefix suhs run lint && npm --prefix suhs-frontend run lint",
+    "test": "npm --prefix suhs test",
+    "db:generate": "npm --prefix suhs run db:generate",
+    "db:migrate": "npm --prefix suhs run db:migrate",
+    "db:seed": "npm --prefix suhs run db:seed"
+  }
+}

@@ -8,11 +8,23 @@ datasource db {
 }
 
 
+enum Role {
+  ADMIN
+  TEACHER
+  STUDENT
+}
+
 model User {
   id           Int      @id @default(autoincrement())
   name         String
   email        String   @unique
   passwordHash String
+  role         Role     @default(STUDENT)
+  subject      String?
+  className    String?
+  rollNumber   String?
+  division     String?
+  studentGroup String?
   tokenVersion Int      @default(0)
   createdAt    DateTime @default(now())
 }

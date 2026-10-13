@@ -17,4 +17,20 @@ export class RegisterDto {
   @IsString()
   @MinLength(8)
   password: string;
+
+  @IsString()
+  @MaxLength(30)
+  className: string;
+
+  @IsString()
+  @MaxLength(30)
+  rollNumber: string;
+
+  @IsString()
+  @MaxLength(50)
+  division: string;
+
+  @IsString()
+  @MaxLength(50)
+  studentGroup: string;
 }

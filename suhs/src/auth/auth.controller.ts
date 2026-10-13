@@ -7,6 +7,7 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { Request } from 'express';
+import { Role } from '@prisma/client';
 import { AuthService } from './auth.service.js';
 import { RegisterDto } from './dto/register.dto.js';
 import { LoginDto } from './dto/login.dto.js';
@@ -17,6 +18,7 @@ type AuthenticatedRequest = Request & {
     id: number;
     name: string;
     email: string;
+    role: Role;
   };
 };
 

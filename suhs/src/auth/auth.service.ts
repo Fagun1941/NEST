@@ -36,11 +36,16 @@ export class AuthService {
           name: dto.name.trim(),
           email,
           passwordHash,
+          className: dto.className.trim(),
+          rollNumber: dto.rollNumber.trim(),
+          division: dto.division.trim(),
+          studentGroup: dto.studentGroup.trim(),
         },
         select: {
           id: true,
           name: true,
           email: true,
+          role: true,
           createdAt: true,
         },
       });
@@ -75,6 +80,7 @@ export class AuthService {
 
     const payload = {
       sub: user.id,
+      role: user.role,
       tokenVersion: user.tokenVersion,
     };
 
@@ -89,6 +95,7 @@ export class AuthService {
         id: user.id,
         name: user.name,
         email: user.email,
+        role: user.role,
       },
     };
   }
