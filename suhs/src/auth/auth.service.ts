@@ -9,6 +9,8 @@ import { PrismaService } from '../prisma/prisma.service.js';
 import { RegisterDto } from './dto/register.dto.js';
 import { LoginDto } from './dto/login.dto.js';
 import * as bcrypt from 'bcrypt';
+import { randomBytes } from 'node:crypto';
+import { Role, type User } from '@prisma/client';
 
 @Injectable()
 export class AuthService {
@@ -78,6 +80,38 @@ export class AuthService {
       throw new UnauthorizedException('Invalid email or password');
     }
 
+    return this.createSession(user);
+  }
+
+  async microsoftLogin(identity: { id: string; email: string; name: string }) {
+    const existing = await this.prisma.user.findUnique({ where: { microsoftId: identity.id } });
+    if (existing) return existing;
+    const email = identity.email.trim().toLowerCase();
+    if (await this.prisma.user.findUnique({ where: { email } })) {
+      throw new ConflictException('An account with this email exists. Use your password to sign in.');
+    }
+    try {
+      return await this.prisma.user.create({ data: {
+        microsoftId: identity.id, email, name: identity.name, role: Role.STUDENT,
+        passwordHash: await bcrypt.hash(randomBytes(48).toString('base64url'), 12),
+      } });
+    } catch (error) {
+      if ((error as { code?: string }).code === 'P2002') {
+        const concurrent = await this.prisma.user.findUnique({ where: { microsoftId: identity.id } });
+        if (concurrent) return concurrent;
+        throw new ConflictException('An account with this email exists. Use your password to sign in.');
+      }
+      throw error;
+    }
+  }
+
+  async microsoftSession(id: number, tokenVersion: number) {
+    const user = await this.prisma.user.findUnique({ where: { id } });
+    if (!user || user.tokenVersion !== tokenVersion) throw new UnauthorizedException('Session expired. Please sign in again.');
+    return this.createSession(user);
+  }
+
+  private async createSession(user: User) {
     const payload = {
       sub: user.id,
       role: user.role,

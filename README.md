@@ -64,6 +64,44 @@ npm start
 `API_URL` must point to the backend when building Next.js because rewrites are
 saved with the build. The default production frontend is also on port 3001.
 
+## Microsoft Entra ID SSO
+
+Register a **Web**, single-tenant app in Microsoft Entra. Its redirect URI must
+be `http://localhost:3001/api/auth/microsoft/callback`. Use authorization code
+flow; implicit grants and Microsoft Graph permissions are not needed.
+
+Set these values in `suhs/.env` (not in the frontend):
+
+```dotenv
+FRONTEND_URL=http://localhost:3001
+MICROSOFT_TENANT_ID=your-directory-tenant-id
+MICROSOFT_CLIENT_ID=your-application-client-id
+MICROSOFT_CLIENT_SECRET=your-client-secret-value
+```
+
+The tenant setting must be your actual Directory ID GUID, not `common`.
+The client secret is the secret **Value**, not the Secret ID. Never commit it.
+For fresh setup, stop the app before running `npm run db:generate` and
+`npm run db:migrate`. Then run `npm run dev` and choose **Sign in with Microsoft**.
+The callback URL is reached automatically after Microsoft sign-in; do not open
+it directly. Restart the backend after editing `.env`.
+
+Microsoft users are identified by tenant ID + object ID. New users receive the
+STUDENT role. Returning users keep their assigned role. Email matching alone
+does not link a Microsoft user to an existing password account; use password
+login for that account. Microsoft-only users have no usable local password.
+
+The backend validates the ID token signature, audience, issuer, lifetime,
+tenant, and nonce. State and PKCE bind the browser flow. A short-lived HttpOnly
+cookie hands off to the existing app JWT without tokens in redirect URLs.
+The app still uses its existing localStorage JWT mechanism. App logout
+invalidates app tokens, but leaves the Microsoft browser session signed in.
+Handoff replay tracking is in memory for this single-backend deployment; use a
+shared atomic replay store before scaling to multiple backend instances.
+
+For deployment, register the production HTTPS callback and set `FRONTEND_URL`
+to that HTTPS origin. Rotate the client secret before its expiration.
+
 ## Other commands
 
 - `npm run dev:api`: backend only.

@@ -19,6 +19,7 @@ model User {
   name         String
   email        String   @unique
   passwordHash String
+  microsoftId  String?  @unique
   role         Role     @default(STUDENT)
   subject      String?
   className    String?

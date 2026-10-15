@@ -2,10 +2,21 @@
 
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useEffect, useState, type FormEvent } from 'react';
+import { useState, useSyncExternalStore, type FormEvent } from 'react';
 import { apiRequest } from '@/lib/api';
 import { saveAccessToken } from '@/lib/auth';
 import type { LoginRequest, LoginResponse } from '@/types/auth';
+
+function subscribeToLocation(callback: () => void) {
+  window.addEventListener('popstate', callback);
+  return () => window.removeEventListener('popstate', callback);
+}
+const microsoftErrors: Record<string, string> = {
+  'not-configured': 'Microsoft sign-in is not configured yet. Please contact your administrator.',
+  'account-exists': 'An account with this email already exists. Sign in with your password. Microsoft accounts are not automatically linked.',
+  cancelled: 'Microsoft sign-in was cancelled. You can try again.',
+  failed: 'Microsoft sign-in could not be completed. Please try again or contact your administrator.',
+};
 
 export default function LoginForm() {
   const router = useRouter();
@@ -13,11 +24,10 @@ export default function LoginForm() {
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
-  const [logoutNotice, setLogoutNotice] = useState(false);
-
-  useEffect(() => {
-    setLogoutNotice(new URLSearchParams(window.location.search).has('logout'));
-  }, []);
+  const search = useSyncExternalStore(subscribeToLocation, () => window.location.search, () => '');
+  const params = new URLSearchParams(search);
+  const logoutNotice = params.has('logout');
+  const microsoftError = microsoftErrors[params.get('microsoft') ?? ''];
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -56,9 +66,9 @@ export default function LoginForm() {
           Your local session has been cleared, but the server could not confirm logout.
         </div>
       )}
-      {error && (
+      {(error || microsoftError) && (
         <div className="mt-6 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800" role="alert">
-          {error}
+          {error || microsoftError}
         </div>
       )}
 
@@ -101,6 +111,17 @@ export default function LoginForm() {
           {loading ? 'Signing in…' : 'Sign in'}
         </button>
       </form>
+
+      <div className="my-5 flex items-center gap-3 text-xs text-slate-500">
+        <span className="h-px flex-1 bg-slate-200" />or<span className="h-px flex-1 bg-slate-200" />
+      </div>
+      <a href="/api/auth/microsoft" className="flex w-full items-center justify-center gap-3 rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm font-semibold text-slate-800 transition hover:bg-slate-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-700">
+        <svg viewBox="0 0 21 21" className="size-5" aria-hidden="true">
+          <path fill="#f25022" d="M0 0h10v10H0z" /><path fill="#7fba00" d="M11 0h10v10H11z" />
+          <path fill="#00a4ef" d="M0 11h10v10H0z" /><path fill="#ffb900" d="M11 11h10v10H11z" />
+        </svg>
+        Sign in with Microsoft
+      </a>
 
       <p className="mt-8 text-center text-sm text-slate-600">
         Don&apos;t have an account?{' '}
