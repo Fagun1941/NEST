@@ -5,6 +5,7 @@
   "engines": { "node": ">=24" },
   "scripts": {
     "setup": "npm --prefix suhs ci && npm --prefix suhs-frontend ci && npm run db:generate",
+    "predev": "npm run db:generate",
     "dev": "node scripts/run-apps.mjs dev",
     "dev:api": "npm --prefix suhs run start:dev",
     "dev:web": "npm --prefix suhs-frontend run dev",
